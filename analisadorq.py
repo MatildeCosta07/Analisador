@@ -1,14 +1,12 @@
 import streamlit as st
+import pandas as pd
 
-# --- Configuração da Página ---
 st.set_page_config(page_title="BioinfoApp", page_icon="🧬")
 st.title("Análise de Sequências de DNA")
 
-# --- Entrada de Dados ---
 sequencia = st.text_area("Escreva a sequência de DNA:", value="ATGCGTA")
 botao = st.button("Analisar")
 
-# --- Lógica de Processamento ---
 if botao == True and sequencia != "":
     sequencia = sequencia.upper()
     
@@ -44,9 +42,17 @@ if botao == True and sequencia != "":
             "TGC": "C", "TGT": "C", "TGA": "*", "TGG": "W"
         }
 
-        # 1. Procurar o início (ATG)
+        pesos_moleculares = {
+            "A": 89.1, "R": 174.2, "N": 132.1, "D": 133.1, "C": 121.2,
+            "Q": 146.1, "E": 147.1, "G": 75.1, "H": 155.2, "I": 131.2,
+            "L": 131.2, "K": 146.2, "M": 149.2, "F": 165.2, "P": 115.1,
+            "S": 105.1, "T": 119.1, "W": 204.2, "Y": 181.2, "V": 117.1,
+            "*": 0.0, "?": 0.0
+        }
+
         inicio = sequencia.find("ATG")
         proteina = ""
+        peso_total = 0.0
         
         if inicio != -1:
             for i in range(inicio, contagem, 3):
@@ -54,6 +60,7 @@ if botao == True and sequencia != "":
                 if len(codao) == 3:
                     amino = tabela_codoes.get(codao, "?")
                     proteina += amino
+                    peso_total = pesos_moleculares.get(amino, 0.0)
         else:
             proteina = "Nenhum codão de iniciação (ATG) encontrado."
                 
@@ -65,33 +72,13 @@ if botao == True and sequencia != "":
         else:
             st.info(f"O conteúdo GC desta sequência está dentro de valores normais. ({conteudo_GC * 100:.1f}%)")
             
-        st.write("### Proteína Traduzida e Análise de Aminoácidos")
+        st.header("1. Análise de DNA")
         
-        # 2. Mostrar a proteína e a contagem (só se encontrou o ATG)
-        if inicio != -1:
-            st.info(proteina)
-            
-            total_aa = len(proteina)
-            st.write(f"**Total de Aminoácidos:** {total_aa}")
-            
-            analise_aa = {}
-            for letra in set(proteina):
-                analise_aa[letra] = proteina.count(letra)
-            
-            st.write("### Quantidade por Aminoácido:")
-            st.table(analise_aa)
+        if conteudo_GC > 0.6:
+            st.warning(f"Atenção: Esta sequência tem um conteúdo GC elevado! ({conteudo_GC * 100:.1f}%)")
         else:
-            st.warning(proteina)
+            st.info(f"O conteúdo GC desta sequência está dentro de valores normais. ({conteudo_GC * 100:.1f}%)")
 
-        st.write("### Distribuição das Bases de DNA")
-        dados_grafico = {
-            "A": contagem_A, 
-            "T": contagem_T, 
-            "C": contagem_C, 
-            "G": contagem_G 
-        }
-        st.bar_chart(dados_grafico)
-        
         st.write("### Contagens Detalhadas")
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
@@ -105,5 +92,29 @@ if botao == True and sequencia != "":
         with col5:
             st.metric(label="Guaninas (G)", value=contagem_G)
 
+        st.write("### Distribuição das Bases de DNA")
+        dados_grafico_dna = {
+            "A": contagem_A, 
+            "T": contagem_T, 
+            "C": contagem_C, 
+            "G": contagem_G 
+        }
+        st.bar_chart(dados_grafico_dna)
 
-
+        st.header("2. Análise da Proteína")
+        
+        if inicio != -1:
+            st.info(proteina)
+            
+            st.write(f"**Total de Aminoácidos:** {len(proteina)}")
+            st.write(f"**Peso Molecular Estimado:** {peso_total:.2f} Da (Daltons)")
+            
+            analise_aa = {}
+            for letra in set(proteina):
+                analise_aa[letra] = proteina.count(letra)
+            
+            st.write("### Distribuição de Aminoácidos")
+            tabela_grafico = pd.DataFrame(list(analise_aa.items()), columns=["Aminoácido", "Quantidade"])
+            st.bar_chart(tabela_grafico, x="Aminoácido", y="Quantidade")
+        else:
+            st.warning(proteina)
