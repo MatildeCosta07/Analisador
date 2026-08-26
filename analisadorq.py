@@ -78,7 +78,8 @@ if botao == True and sequencia != "":
             for letra in set(proteina):
                 analise_aa[letra] = proteina.count(letra)
             
-            st.bar_chart(analise_aa)
+            st.write("### Quantidade por Aminoácido:")
+            st.table(analise_aa)
         else:
             st.warning(proteina)
 
@@ -103,7 +104,6 @@ if botao == True and sequencia != "":
             st.metric(label="Citosinas (C)", value=contagem_C)
         with col5:
             st.metric(label="Guaninas (G)", value=contagem_G)
-
 
 
 
