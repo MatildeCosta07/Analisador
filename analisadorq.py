@@ -314,4 +314,4 @@ if botao == True and sequencia != "":
                                 
                     st.success(f"A enzima **{enzima}** corta nas posições: **{posicoes}**")
             if enzimas_encontradas == 0:
-                    st.warning("Nenhuma enzima da base de dados corta esta sequência.")
+                st.warning("Nenhuma enzima da base de dados corta esta sequência.")
