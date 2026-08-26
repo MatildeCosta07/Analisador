@@ -3,3 +3,4 @@ pandas
 py3Dmol
 stmol
 biopython
+ipython_genutils
