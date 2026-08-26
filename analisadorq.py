@@ -1,12 +1,17 @@
 import streamlit as st
-# interface #
+
+# --- Configuração da Página ---
 st.set_page_config(page_title="BioinfoApp", page_icon="🧬")
-st.title("Análise de Sequencias de DNA")
-sequencia = st.text_area("Escreva a sequencia de DNA:", value= "ATGCGTA")
+st.title("Análise de Sequências de DNA")
+
+# --- Entrada de Dados ---
+sequencia = st.text_area("Escreva a sequência de DNA:", value="ATGCGTA")
 botao = st.button("Analisar")
 
+# --- Lógica de Processamento ---
 if botao == True and sequencia != "":
     sequencia = sequencia.upper()
+    
     contagem = len(sequencia)
     contagem_A = sequencia.count("A")
     contagem_T = sequencia.count("T")
@@ -14,11 +19,12 @@ if botao == True and sequencia != "":
     contagem_G = sequencia.count("G")
 
     soma_bases = contagem_A + contagem_T + contagem_C + contagem_G
-    if soma_bases != contagem:
-            st.error("Erro: A sequência contém caracteres inválidos! Por favor, utilize apenas A, T, C ou G.")
-    else:
 
-        # Tabela completa com os 64 codões de DNA
+    if soma_bases != contagem:
+        st.error("Erro: A sequência contém caracteres inválidos! Por favor, utilize apenas A, T, C ou G.")
+    else:
+        conteudo_GC = (contagem_G + contagem_C) / contagem
+        
         tabela_codoes = {
             "ATA": "I", "ATC": "I", "ATT": "I", "ATG": "M",
             "ACA": "T", "ACC": "T", "ACG": "T", "ACT": "T",
@@ -38,46 +44,65 @@ if botao == True and sequencia != "":
             "TGC": "C", "TGT": "C", "TGA": "*", "TGG": "W"
         }
 
+        # 1. Procurar o início (ATG)
+        inicio = sequencia.find("ATG")
         proteina = ""
-        for i in range(0, len(sequencia), 3):
-            codao = sequencia[i:i+3]
-            if len(codao) == 3:
-                amino = tabela_codoes.get(codao, "?")
-                proteina += amino
         
-        conteudo_GC = (contagem_G + contagem_C) / contagem
-        st.success("Análise concluída com sucesso!")
-
-        if conteudo_GC > 0.6:
-            st.warning("Atenção: Esta sequência tem um conteúdo GC elevado!")
+        if inicio != -1:
+            for i in range(inicio, contagem, 3):
+                codao = sequencia[i:i+3]
+                if len(codao) == 3:
+                    amino = tabela_codoes.get(codao, "?")
+                    proteina += amino
         else:
-            st.info("O conteúdo GC desta sequência está dentro de valores normais.")
+            proteina = "Nenhum codão de iniciação (ATG) encontrado."
+                
+        # --- Apresentação Visual ---
+        st.success("Análise concluída com sucesso!")
+        
+        if conteudo_GC > 0.6:
+            st.warning(f"Atenção: Esta sequência tem um conteúdo GC elevado! ({conteudo_GC * 100:.1f}%)")
+        else:
+            st.info(f"O conteúdo GC desta sequência está dentro de valores normais. ({conteudo_GC * 100:.1f}%)")
+            
+        st.write("### Proteína Traduzida e Análise de Aminoácidos")
+        
+        # 2. Mostrar a proteína e a contagem (só se encontrou o ATG)
+        if inicio != -1:
+            st.info(proteina)
+            
+            total_aa = len(proteina)
+            st.write(f"**Total de Aminoácidos:** {total_aa}")
+            
+            analise_aa = {}
+            for letra in set(proteina):
+                analise_aa[letra] = proteina.count(letra)
+            
+            st.bar_chart(analise_aa)
+        else:
+            st.warning(proteina)
 
-
-
+        st.write("### Distribuição das Bases de DNA")
         dados_grafico = {
-        "A": contagem_A, 
-        "T": contagem_T, 
-        "C": contagem_C, 
-        "G": contagem_G }
+            "A": contagem_A, 
+            "T": contagem_T, 
+            "C": contagem_C, 
+            "G": contagem_G 
+        }
         st.bar_chart(dados_grafico)
-
-
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
-
+        
+        st.write("### Contagens Detalhadas")
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.metric(label="Contagem do DNA", value=contagem)
+            st.metric(label="Total de Bases", value=contagem)
         with col2:
-            st.metric(label="Contagem de Adeninas", value=contagem_A)
+            st.metric(label="Adeninas (A)", value=contagem_A)
         with col3:
-            st.metric(label="Contagem de Timinas", value=contagem_T)
+            st.metric(label="Timinas (T)", value=contagem_T)
         with col4:
-            st.metric(label="Contagem de Citosinas", value=contagem_C)
+            st.metric(label="Citosinas (C)", value=contagem_C)
         with col5:
-            st.metric(label="Contagem de Guaninas", value=contagem_G)
-
-        st.write("### Proteína Traduzida:")
-        st.info(proteina)
+            st.metric(label="Guaninas (G)", value=contagem_G)
 
 
 
