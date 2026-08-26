@@ -60,7 +60,7 @@ if botao == True and sequencia != "":
                 if len(codao) == 3:
                     amino = tabela_codoes.get(codao, "?")
                     proteina += amino
-                    peso_total = pesos_moleculares.get(amino, 0.0)
+                    peso_total += pesos_moleculares.get(amino, 0.0)
         else:
             proteina = "Nenhum codão de iniciação (ATG) encontrado."
                 
