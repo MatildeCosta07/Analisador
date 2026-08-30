@@ -154,6 +154,8 @@ if botao == True and sequencia != "":
                                 
                     posicoes = ", ".join(map(str, cortes))
                                 
-                    st.success(f"A enzima **{enzima}** corta nas posições: **{posicoes}**")
+                    st.success(f"##### A enzima **{enzima}** corta nas posições: **{posicoes}**")
             if enzimas_encontradas == 0:
                     st.warning("Nenhuma enzima da base de dados corta esta sequência.")
+   
+   
